@@ -92,3 +92,5 @@ openssl rand -base64 32
 4. `JWT_SECRET` debe ser único y seguro (mínimo 32 caracteres)
 5. `CORS_ORIGIN` debe incluir todos los dominios del frontend
 
+
+

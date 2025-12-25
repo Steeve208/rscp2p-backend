@@ -26,3 +26,5 @@ echo "=== Verificando ==="
 git status
 git log --oneline -1
 
+
+
