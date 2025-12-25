@@ -125,14 +125,16 @@ export const blockchainConfig = registerAs('blockchain', () => {
   // Escrow Contract Address
   const escrowContractAddress = process.env.ESCROW_CONTRACT_ADDRESS || '';
 
-  // Validación
+  // Validación - Blockchain es opcional, solo validar si se intenta usar
+  // Si rpcUrl está vacío, el sistema funcionará sin blockchain (modo P2P básico)
   if (process.env.NODE_ENV === 'production') {
-    if (!rpcUrl) {
-      throw new Error('BLOCKCHAIN_RPC_URL is required in production');
+    // Solo validar si se intenta usar blockchain (rpcUrl no está vacío)
+    if (rpcUrl && rpcUrl.trim() !== '') {
+      if (!escrowContractAddress || escrowContractAddress.trim() === '') {
+        throw new Error('ESCROW_CONTRACT_ADDRESS is required when BLOCKCHAIN_RPC_URL is set');
+      }
     }
-    if (!escrowContractAddress) {
-      throw new Error('ESCROW_CONTRACT_ADDRESS is required in production');
-    }
+    // Si no hay rpcUrl, el sistema funcionará sin blockchain (modo P2P básico)
   }
 
   // Advertencias

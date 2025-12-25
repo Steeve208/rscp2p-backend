@@ -3,9 +3,23 @@ import { ConfigService } from '@nestjs/config';
 import { databaseConfig } from './env';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
+import * as fs from 'fs';
 
 // Cargar variables de entorno desde .env para TypeORM CLI
-dotenv.config({ path: path.join(__dirname, '../../.env') });
+// Intentar múltiples rutas posibles
+const envPaths = [
+  path.join(__dirname, '../../.env'),
+  path.join(process.cwd(), '.env'),
+  '/var/www/p2prsc-backend/.env',
+];
+
+for (const envPath of envPaths) {
+  if (fs.existsSync(envPath)) {
+    dotenv.config({ path: envPath });
+    console.log(`Loaded .env from: ${envPath}`);
+    break;
+  }
+}
 
 export const getDatabaseConfig = (configService: ConfigService): DataSourceOptions => {
   const dbConfig = configService.get('database');
