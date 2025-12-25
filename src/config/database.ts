@@ -1,6 +1,11 @@
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { databaseConfig } from './env';
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+
+// Cargar variables de entorno desde .env para TypeORM CLI
+dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 export const getDatabaseConfig = (configService: ConfigService): DataSourceOptions => {
   const dbConfig = configService.get('database');
@@ -23,7 +28,7 @@ export const getDatabaseConfig = (configService: ConfigService): DataSourceOptio
 export const AppDataSource = new DataSource({
   type: 'postgres',
   host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT, 10) || 5432,
+  port: parseInt(process.env.DB_PORT || '5432', 10),
   username: process.env.DB_USERNAME || 'postgres',
   password: process.env.DB_PASSWORD || 'postgres',
   database: process.env.DB_DATABASE || 'rsc_db',
