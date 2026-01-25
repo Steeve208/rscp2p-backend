@@ -85,18 +85,6 @@ export class UsersController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
   async getProfile(@CurrentUser() user: User) {
-    const profile = await this.usersService.getProfile(user.id);
-    
-    // Retornar solo datos públicos incluso en el perfil propio
-    // Nunca exponer información personal
-    return {
-      id: profile.id,
-      walletAddress: profile.walletAddress,
-      reputationScore: Number(profile.reputationScore),
-      createdAt: profile.createdAt,
-      isActive: profile.isActive,
-      lastLoginAt: profile.lastLoginAt,
-      loginCount: profile.loginCount,
-    };
+    return this.usersService.getProfileWithStats(user.id);
   }
 }

@@ -8,12 +8,21 @@ export class UserResponseDto {
   @Expose()
   id: string;
 
-  @Expose({ name: 'wallet_address' })
+  @Expose()
   walletAddress: string;
 
-  @Expose({ name: 'reputation_score' })
+  @Expose()
   reputationScore: number;
 
-  @Expose({ name: 'created_at' })
+  @Expose()
+  isActive: boolean;
+
+  @Expose()
+  loginCount: number;
+
+  @Expose()
+  lastLoginAt: Date;
+
+  @Expose()
   createdAt: Date;
 }

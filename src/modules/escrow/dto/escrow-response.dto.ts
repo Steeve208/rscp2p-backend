@@ -5,48 +5,48 @@ export class EscrowResponseDto {
   @Expose()
   id: string;
 
-  @Expose({ name: 'order_id' })
+  @Expose()
   orderId: string;
 
-  @Expose({ name: 'escrow_id' })
+  @Expose()
   escrowId: string;
 
-  @Expose({ name: 'contract_address' })
+  @Expose()
   contractAddress: string;
 
-  @Expose({ name: 'create_transaction_hash' })
-  createTransactionHash: string;
+  @Expose()
+  createTransactionHash: string | null;
 
-  @Expose({ name: 'crypto_amount' })
-  cryptoAmount: number;
+  @Expose()
+  cryptoAmount: string;
 
-  @Expose({ name: 'crypto_currency' })
+  @Expose()
   cryptoCurrency: string;
 
   @Expose()
   status: EscrowStatus;
 
-  @Expose({ name: 'release_transaction_hash' })
-  releaseTransactionHash: string;
+  @Expose()
+  releaseTransactionHash: string | null;
 
-  @Expose({ name: 'refund_transaction_hash' })
-  refundTransactionHash: string;
+  @Expose()
+  refundTransactionHash: string | null;
 
-  @Expose({ name: 'locked_at' })
-  lockedAt: Date;
+  @Expose()
+  lockedAt: Date | null;
 
-  @Expose({ name: 'released_at' })
-  releasedAt: Date;
+  @Expose()
+  releasedAt: Date | null;
 
-  @Expose({ name: 'refunded_at' })
-  refundedAt: Date;
+  @Expose()
+  refundedAt: Date | null;
 
-  @Expose({ name: 'validation_errors' })
-  validationErrors: string;
+  @Expose()
+  validationErrors: string | null;
 
-  @Expose({ name: 'created_at' })
+  @Expose()
   createdAt: Date;
 
-  @Expose({ name: 'updated_at' })
+  @Expose()
   updatedAt: Date;
 }

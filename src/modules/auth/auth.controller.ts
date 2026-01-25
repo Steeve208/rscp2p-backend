@@ -6,6 +6,8 @@ import {
   HttpStatus,
   UseGuards,
   Get,
+  Headers,
+  BadRequestException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ChallengeDto, VerifyDto, RefreshDto } from './dto';
@@ -43,8 +45,17 @@ export class AuthController {
    */
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  async refreshToken(@Body() dto: RefreshDto) {
-    return this.authService.refreshToken(dto);
+  async refreshToken(@Body() dto: RefreshDto, @Headers('authorization') authHeader?: string) {
+    const headerToken = authHeader?.startsWith('Bearer ')
+      ? authHeader.replace('Bearer ', '').trim()
+      : undefined;
+    const refreshToken = dto.refreshToken || headerToken;
+
+    if (!refreshToken) {
+      throw new BadRequestException('Refresh token requerido');
+    }
+
+    return this.authService.refreshToken({ refreshToken });
   }
 
   /**
@@ -58,6 +69,7 @@ export class AuthController {
     return {
       id: user.id,
       walletAddress: user.walletAddress,
+      reputationScore: Number(user.reputationScore),
       isActive: user.isActive,
       loginCount: user.loginCount,
       lastLoginAt: user.lastLoginAt,

@@ -1,61 +1,79 @@
-import { Expose, Type } from 'class-transformer';
+import { Expose } from 'class-transformer';
 import { OrderStatus } from '../../../common/enums/order-status.enum';
 
 export class OrderResponseDto {
   @Expose()
   id: string;
 
-  @Expose({ name: 'seller_id' })
+  @Expose()
   sellerId: string;
 
-  @Expose({ name: 'buyer_id' })
-  buyerId: string;
+  @Expose()
+  buyerId: string | null;
 
-  @Expose({ name: 'crypto_amount' })
-  cryptoAmount: number;
+  @Expose()
+  seller?: { id: string; wallet_address: string; reputation_score: number };
 
-  @Expose({ name: 'crypto_currency' })
+  @Expose()
+  buyer?: { id: string; wallet_address: string; reputation_score: number } | null;
+
+  @Expose()
+  cryptoAmount: string;
+
+  @Expose()
   cryptoCurrency: string;
 
-  @Expose({ name: 'fiat_amount' })
-  fiatAmount: number;
+  @Expose()
+  fiatAmount: string;
 
-  @Expose({ name: 'fiat_currency' })
+  @Expose()
   fiatCurrency: string;
 
-  @Expose({ name: 'price_per_unit' })
-  pricePerUnit: number;
+  @Expose()
+  pricePerUnit: string | null;
 
   @Expose()
   status: OrderStatus;
 
-  @Expose({ name: 'escrow_id' })
-  escrowId: string;
-
-  @Expose({ name: 'payment_method' })
-  paymentMethod: string;
+  @Expose()
+  escrowId: string | null;
 
   @Expose()
-  terms: string;
+  paymentMethod: string | null;
 
-  @Expose({ name: 'expires_at' })
-  expiresAt: Date;
+  @Expose()
+  terms: string | null;
 
-  @Expose({ name: 'accepted_at' })
-  acceptedAt: Date;
+  @Expose()
+  expiresAt: Date | null;
 
-  @Expose({ name: 'completed_at' })
-  completedAt: Date;
+  @Expose()
+  acceptedAt: Date | null;
 
-  @Expose({ name: 'cancelled_at' })
-  cancelledAt: Date;
+  @Expose()
+  completedAt: Date | null;
 
-  @Expose({ name: 'cancelled_by' })
-  cancelledBy: string;
+  @Expose()
+  cancelledAt: Date | null;
 
-  @Expose({ name: 'created_at' })
+  @Expose()
+  cancelledBy: 'SELLER' | 'BUYER' | null;
+
+  @Expose()
+  disputedAt: Date | null;
+
+  @Expose()
   createdAt: Date;
 
-  @Expose({ name: 'updated_at' })
+  @Expose()
   updatedAt: Date;
+
+  @Expose()
+  blockchain?: string;
+
+  @Expose()
+  tokenAddress?: string;
+
+  @Expose()
+  chainId?: number;
 }

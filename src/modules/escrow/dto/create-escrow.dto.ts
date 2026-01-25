@@ -1,10 +1,8 @@
 import {
   IsString,
-  IsNumber,
   IsNotEmpty,
   IsOptional,
-  Min,
-  Matches,
+  IsNumberString,
 } from 'class-validator';
 
 export class CreateEscrowDto {
@@ -14,22 +12,15 @@ export class CreateEscrowDto {
 
   @IsString()
   @IsNotEmpty()
-  @Matches(/^0x[a-fA-F0-9]+$/, {
-    message: 'escrowId must be a valid blockchain address or ID',
-  })
   escrowId: string;
 
   @IsString()
   @IsNotEmpty()
-  @Matches(/^0x[a-fA-F0-9]{40}$/, {
-    message: 'contractAddress must be a valid Ethereum address',
-  })
   contractAddress: string;
 
-  @IsNumber()
-  @Min(0.00000001)
+  @IsNumberString()
   @IsNotEmpty()
-  cryptoAmount: number;
+  cryptoAmount: string;
 
   @IsString()
   @IsNotEmpty()
@@ -37,8 +28,5 @@ export class CreateEscrowDto {
 
   @IsString()
   @IsOptional()
-  @Matches(/^0x[a-fA-F0-9]{64}$/, {
-    message: 'createTransactionHash must be a valid transaction hash',
-  })
   createTransactionHash?: string;
 }

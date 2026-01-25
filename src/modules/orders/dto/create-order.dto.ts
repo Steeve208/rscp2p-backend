@@ -1,36 +1,32 @@
 import {
   IsString,
-  IsNumber,
   IsNotEmpty,
   IsOptional,
-  Min,
-  IsEnum,
+  IsInt,
   IsDateString,
+  IsNumberString,
 } from 'class-validator';
 
 export class CreateOrderDto {
-  @IsNumber()
-  @Min(0.00000001)
+  @IsNumberString()
   @IsNotEmpty()
-  cryptoAmount: number;
+  cryptoAmount: string;
 
   @IsString()
   @IsNotEmpty()
   cryptoCurrency: string;
 
-  @IsNumber()
-  @Min(0.01)
+  @IsNumberString()
   @IsNotEmpty()
-  fiatAmount: number;
+  fiatAmount: string;
 
   @IsString()
   @IsNotEmpty()
   fiatCurrency: string;
 
-  @IsNumber()
-  @Min(0)
+  @IsNumberString()
   @IsOptional()
-  pricePerUnit?: number;
+  pricePerUnit?: string;
 
   @IsString()
   @IsOptional()
@@ -43,4 +39,24 @@ export class CreateOrderDto {
   @IsDateString()
   @IsOptional()
   expiresAt?: string;
+
+  @IsInt()
+  @IsOptional()
+  chainId?: number;
+
+  @IsString()
+  @IsOptional()
+  tokenAddress?: string;
+
+  @IsString()
+  @IsOptional()
+  blockchain?: string;
+
+  @IsString()
+  @IsOptional()
+  escrowTxHash?: string;
+
+  @IsString()
+  @IsOptional()
+  escrowContractAddress?: string;
 }

@@ -75,6 +75,7 @@ export class EscrowService {
       cryptoCurrency,
       createTransactionHash,
     } = createEscrowDto;
+    const cryptoAmountNum = Number(cryptoAmount);
 
     // Verificar que la orden existe
     const order = await this.orderRepository.findOne({
@@ -105,7 +106,7 @@ export class EscrowService {
 
     // Validar consistencia con la orden
     const validation = await this.validateConsistency(orderId, {
-      cryptoAmount,
+      cryptoAmount: cryptoAmountNum,
       cryptoCurrency: cryptoCurrency.toUpperCase(),
     });
 
@@ -120,7 +121,7 @@ export class EscrowService {
       orderId,
       escrowId,
       contractAddress,
-      cryptoAmount,
+      cryptoAmount: cryptoAmountNum,
       cryptoCurrency: cryptoCurrency.toUpperCase(),
       createTransactionHash,
       status: EscrowStatus.PENDING,
@@ -328,16 +329,26 @@ export class EscrowService {
     escrowId: string,
     updateEscrowDto: UpdateEscrowDto,
   ): Promise<EscrowResponseDto> {
-    const escrow = await this.escrowRepository.findOne({
-      where: { escrowId },
-    });
+    const escrow =
+      (await this.escrowRepository.findOne({
+        where: { id: escrowId },
+      })) ||
+      (await this.escrowRepository.findOne({
+        where: { escrowId },
+      }));
 
     if (!escrow) {
       throw new NotFoundException('Escrow no encontrado');
     }
 
-    const { status, releaseTransactionHash, refundTransactionHash } =
-      updateEscrowDto;
+    const {
+      status,
+      releaseTransactionHash,
+      refundTransactionHash,
+      createTransactionHash,
+      releasedAt,
+      refundedAt,
+    } = updateEscrowDto;
 
     // Actualizar estado
     if (status) {
@@ -352,14 +363,14 @@ export class EscrowService {
           { status: OrderStatus.ONCHAIN_LOCKED },
         );
       } else if (status === EscrowStatus.RELEASED && !escrow.releasedAt) {
-        escrow.releasedAt = new Date();
+        escrow.releasedAt = releasedAt ? new Date(releasedAt) : new Date();
         // Actualizar estado de la orden
         await this.orderRepository.update(
           { id: escrow.orderId },
           { status: OrderStatus.COMPLETED, completedAt: new Date() },
         );
       } else if (status === EscrowStatus.REFUNDED && !escrow.refundedAt) {
-        escrow.refundedAt = new Date();
+        escrow.refundedAt = refundedAt ? new Date(refundedAt) : new Date();
         // Actualizar estado de la orden
         await this.orderRepository.update(
           { id: escrow.orderId },
@@ -374,6 +385,9 @@ export class EscrowService {
     }
     if (refundTransactionHash) {
       escrow.refundTransactionHash = refundTransactionHash;
+    }
+    if (createTransactionHash) {
+      escrow.createTransactionHash = createTransactionHash;
     }
 
     // Limpiar errores de validación si se actualiza
@@ -424,7 +438,7 @@ export class EscrowService {
       orderId,
       escrowId,
       contractAddress,
-      cryptoAmount,
+      cryptoAmount: cryptoAmount.toString(),
       cryptoCurrency,
       createTransactionHash: transactionHash,
     });
@@ -588,21 +602,21 @@ export class EscrowService {
   private toResponseDto(escrow: Escrow): EscrowResponseDto {
     return plainToInstance(EscrowResponseDto, {
       id: escrow.id,
-      order_id: escrow.orderId,
-      escrow_id: escrow.escrowId,
-      contract_address: escrow.contractAddress,
-      create_transaction_hash: escrow.createTransactionHash,
-      crypto_amount: Number(escrow.cryptoAmount),
-      crypto_currency: escrow.cryptoCurrency,
+      orderId: escrow.orderId,
+      escrowId: escrow.escrowId,
+      contractAddress: escrow.contractAddress,
+      createTransactionHash: escrow.createTransactionHash,
+      cryptoAmount: escrow.cryptoAmount?.toString(),
+      cryptoCurrency: escrow.cryptoCurrency,
       status: escrow.status,
-      release_transaction_hash: escrow.releaseTransactionHash,
-      refund_transaction_hash: escrow.refundTransactionHash,
-      locked_at: escrow.lockedAt,
-      released_at: escrow.releasedAt,
-      refunded_at: escrow.refundedAt,
-      validation_errors: escrow.validationErrors,
-      created_at: escrow.createdAt,
-      updated_at: escrow.updatedAt,
+      releaseTransactionHash: escrow.releaseTransactionHash,
+      refundTransactionHash: escrow.refundTransactionHash,
+      lockedAt: escrow.lockedAt,
+      releasedAt: escrow.releasedAt,
+      refundedAt: escrow.refundedAt,
+      validationErrors: escrow.validationErrors,
+      createdAt: escrow.createdAt,
+      updatedAt: escrow.updatedAt,
     });
   }
 }

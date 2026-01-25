@@ -44,7 +44,7 @@ export class DisputesService {
     userId: string,
     createDisputeDto: CreateDisputeDto,
   ): Promise<Dispute> {
-    const { orderId, reason } = createDisputeDto;
+    const { orderId, reason, responseDeadline, evidenceDeadline } = createDisputeDto;
 
     // Verificar que la orden existe
     const order = await this.orderRepository.findOne({
@@ -90,12 +90,16 @@ export class DisputesService {
 
     // Calcular deadlines
     const now = new Date();
-    const responseDeadline = new Date(
-      now.getTime() + this.TIMERS.RESPONSE_DEADLINE_HOURS * 60 * 60 * 1000,
-    );
-    const evidenceDeadline = new Date(
-      now.getTime() + this.TIMERS.EVIDENCE_DEADLINE_HOURS * 60 * 60 * 1000,
-    );
+    const responseDeadlineDate = responseDeadline
+      ? new Date(responseDeadline)
+      : new Date(
+          now.getTime() + this.TIMERS.RESPONSE_DEADLINE_HOURS * 60 * 60 * 1000,
+        );
+    const evidenceDeadlineDate = evidenceDeadline
+      ? new Date(evidenceDeadline)
+      : new Date(
+          now.getTime() + this.TIMERS.EVIDENCE_DEADLINE_HOURS * 60 * 60 * 1000,
+        );
     const expiresAt = new Date(
       now.getTime() + this.TIMERS.ESCALATION_DAYS * 24 * 60 * 60 * 1000,
     );
@@ -107,8 +111,8 @@ export class DisputesService {
       respondentId,
       reason,
       status: DisputeStatus.OPEN,
-      responseDeadline,
-      evidenceDeadline,
+      responseDeadline: responseDeadlineDate,
+      evidenceDeadline: evidenceDeadlineDate,
       expiresAt,
     });
 
@@ -116,6 +120,7 @@ export class DisputesService {
 
     // Actualizar estado de la orden
     order.status = OrderStatus.DISPUTED;
+    order.disputedAt = new Date();
     await this.orderRepository.save(order);
 
     // Registrar evento de reputation (penalización por abrir disputa)

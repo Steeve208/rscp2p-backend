@@ -10,41 +10,38 @@ import { ApiResponseDto } from '../dto';
 
 export interface Response<T> {
   data: T;
-  statusCode: number;
-  message?: string;
-  timestamp: string;
+  total?: number;
+  page?: number;
+  limit?: number;
+  totalPages?: number;
 }
 
 @Injectable()
 export class TransformInterceptor<T> implements NestInterceptor<T, Response<T>> {
   intercept(context: ExecutionContext, next: CallHandler): Observable<Response<T>> {
-    const statusCode = context.switchToHttp().getResponse().statusCode;
-    
     return next.handle().pipe(
       map((data) => {
-        // Si ya es una ApiResponseDto, retornarla tal cual
+        // Si el controlador ya responde con el formato esperado, no tocar.
+        if (data && typeof data === 'object' && 'data' in data) {
+          return data as Response<T>;
+        }
+
+        // Si viene de ApiResponseDto, mapear a formato { data } o paginado.
         if (data instanceof ApiResponseDto) {
-          return {
-            statusCode,
-            ...data,
-          } as any;
+          const innerData = data.data as any;
+          if (
+            innerData &&
+            typeof innerData === 'object' &&
+            'data' in innerData &&
+            'total' in innerData
+          ) {
+            return innerData as Response<T>;
+          }
+          return { data: innerData } as Response<T>;
         }
 
-        // Si es un objeto con paginación, mantener estructura
-        if (data && typeof data === 'object' && 'data' in data && 'total' in data) {
-          return {
-            statusCode,
-            data,
-            timestamp: new Date().toISOString(),
-          };
-        }
-
-        // Respuesta estándar
-        return {
-          statusCode,
-          data,
-          timestamp: new Date().toISOString(),
-        };
+        // Respuesta estándar.
+        return { data } as Response<T>;
       }),
     );
   }

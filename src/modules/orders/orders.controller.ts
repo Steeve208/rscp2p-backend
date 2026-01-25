@@ -200,6 +200,8 @@ export class OrdersController {
       user.id,
       role || 'both',
       status,
+      page,
+      limit,
     );
     return ApiResponseDto.success(result, 'Tus órdenes obtenidas exitosamente');
   }
@@ -236,7 +238,7 @@ export class OrdersController {
   @HttpCode(HttpStatus.OK)
   async dispute(@Param('id') id: string, @CurrentUser() user: User) {
     // Validar que el usuario es parte de la orden (se hace en el servicio)
-    const order = await this.ordersService.markAsDisputed(id);
+    const order = await this.ordersService.markAsDisputed(id, user.id);
     return ApiResponseDto.success(order, 'Orden marcada como disputada');
   }
 

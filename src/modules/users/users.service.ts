@@ -7,6 +7,8 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere, Like } from 'typeorm';
 import { User } from '../../database/entities/user.entity';
+import { Order } from '../../database/entities/order.entity';
+import { OrderStatus } from '../../common/enums/order-status.enum';
 import { UserResponseDto } from './dto';
 import { plainToInstance } from 'class-transformer';
 
@@ -17,6 +19,8 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Order)
+    private readonly orderRepository: Repository<Order>,
   ) {}
 
   /**
@@ -38,10 +42,12 @@ export class UsersService {
    * Encuentra un usuario por wallet address (solo datos públicos)
    */
   async findOneByWallet(walletAddress: string): Promise<UserResponseDto> {
-    const normalizedAddress = walletAddress.toLowerCase();
-    const user = await this.userRepository.findOne({
-      where: { walletAddress: normalizedAddress },
-    });
+    const user = await this.userRepository
+      .createQueryBuilder('user')
+      .where('LOWER(user.walletAddress) = LOWER(:address)', {
+        address: walletAddress,
+      })
+      .getOne();
 
     if (!user) {
       throw new NotFoundException('Usuario no encontrado');
@@ -103,6 +109,33 @@ export class UsersService {
     }
 
     return user;
+  }
+
+  /**
+   * Obtiene el perfil público del usuario autenticado con stats
+   */
+  async getProfileWithStats(userId: string): Promise<{
+    id: string;
+    walletAddress: string;
+    reputationScore: number;
+    isActive: boolean;
+    loginCount: number;
+    lastLoginAt: Date;
+    createdAt: Date;
+    totalOrders: number;
+    completedOrders: number;
+    cancelledOrders: number;
+    disputedOrders: number;
+    averageRating: number;
+  }> {
+    const user = await this.getProfile(userId);
+    const stats = await this.computeStats(user.id);
+
+    return {
+      ...this.toPublicDto(user),
+      ...stats,
+      walletAddress: user.walletAddress,
+    };
   }
 
   /**
@@ -186,32 +219,28 @@ export class UsersService {
    */
   async getStats(walletAddress: string): Promise<{
     walletAddress: string;
-    reputationScore: number;
-    createdAt: Date;
-    rank?: number;
+    totalOrders: number;
+    completedOrders: number;
+    cancelledOrders: number;
+    disputedOrders: number;
+    averageRating: number;
   }> {
-    const user = await this.userRepository.findOne({
-      where: { walletAddress: walletAddress.toLowerCase() },
-    });
+    const user = await this.userRepository
+      .createQueryBuilder('user')
+      .where('LOWER(user.walletAddress) = LOWER(:address)', {
+        address: walletAddress,
+      })
+      .getOne();
 
     if (!user) {
       throw new NotFoundException('Usuario no encontrado');
     }
 
-    // Calcular ranking (usuarios con mayor reputation score)
-    const rank = await this.userRepository
-      .createQueryBuilder('user')
-      .where('user.isActive = :isActive', { isActive: true })
-      .andWhere('user.reputationScore > :score', {
-        score: user.reputationScore,
-      })
-      .getCount() + 1;
+    const stats = await this.computeStats(user.id);
 
     return {
       walletAddress: user.walletAddress,
-      reputationScore: Number(user.reputationScore),
-      createdAt: user.createdAt,
-      rank,
+      ...stats,
     };
   }
 
@@ -221,9 +250,56 @@ export class UsersService {
   private toPublicDto(user: User): UserResponseDto {
     return plainToInstance(UserResponseDto, {
       id: user.id,
-      wallet_address: user.walletAddress,
-      reputation_score: Number(user.reputationScore),
-      created_at: user.createdAt,
+      walletAddress: user.walletAddress,
+      reputationScore: Number(user.reputationScore),
+      isActive: user.isActive,
+      loginCount: user.loginCount,
+      lastLoginAt: user.lastLoginAt,
+      createdAt: user.createdAt,
     });
+  }
+
+  /**
+   * Calcula estadísticas agregadas del usuario sobre órdenes
+   */
+  private async computeStats(userId: string): Promise<{
+    totalOrders: number;
+    completedOrders: number;
+    cancelledOrders: number;
+    disputedOrders: number;
+    averageRating: number;
+  }> {
+    const totalOrders = await this.orderRepository.count({
+      where: [{ sellerId: userId }, { buyerId: userId }],
+    });
+
+    const completedOrders = await this.orderRepository.count({
+      where: [
+        { sellerId: userId, status: OrderStatus.COMPLETED },
+        { buyerId: userId, status: OrderStatus.COMPLETED },
+      ],
+    });
+
+    const cancelledOrders = await this.orderRepository.count({
+      where: [
+        { sellerId: userId, status: OrderStatus.REFUNDED },
+        { buyerId: userId, status: OrderStatus.REFUNDED },
+      ],
+    });
+
+    const disputedOrders = await this.orderRepository.count({
+      where: [
+        { sellerId: userId, status: OrderStatus.DISPUTED },
+        { buyerId: userId, status: OrderStatus.DISPUTED },
+      ],
+    });
+
+    return {
+      totalOrders,
+      completedOrders,
+      cancelledOrders,
+      disputedOrders,
+      averageRating: 0,
+    };
   }
 }

@@ -107,6 +107,24 @@ export class Order {
   escrowId: string;
 
   /**
+   * Red blockchain (ej: Ethereum, Polygon)
+   */
+  @Column({ nullable: true, name: 'blockchain' })
+  blockchain: string;
+
+  /**
+   * Dirección del token (ERC20)
+   */
+  @Column({ nullable: true, name: 'token_address' })
+  tokenAddress: string;
+
+  /**
+   * Chain ID de la red
+   */
+  @Column({ type: 'int', nullable: true, name: 'chain_id' })
+  chainId: number;
+
+  /**
    * Método de pago (ej: BANK_TRANSFER, PAYPAL)
    */
   @Column({ nullable: true, name: 'payment_method' })

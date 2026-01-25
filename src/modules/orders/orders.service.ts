@@ -8,10 +8,11 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere, Like } from 'typeorm';
 import { Order } from '../../database/entities/order.entity';
+import { Dispute } from '../../database/entities/dispute.entity';
 import { OrderStatus } from '../../common/enums/order-status.enum';
+import { DisputeStatus } from '../../common/enums/dispute-status.enum';
 import { CreateOrderDto, AcceptOrderDto, OrderResponseDto } from './dto';
 import { UsersService } from '../users/users.service';
-import { ReputationService } from '../reputation/reputation.service';
 import { AuditService } from '../../common/audit/audit.service';
 import { plainToInstance } from 'class-transformer';
 
@@ -22,6 +23,8 @@ export class OrdersService {
   constructor(
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
+    @InjectRepository(Dispute)
+    private readonly disputeRepository: Repository<Dispute>,
     private readonly usersService: UsersService,
     private readonly auditService: AuditService,
   ) {}
@@ -39,10 +42,16 @@ export class OrdersService {
       paymentMethod,
       terms,
       expiresAt,
+      chainId,
+      tokenAddress,
+      blockchain,
     } = createOrderDto;
 
     // Calcular pricePerUnit si no se proporciona
-    const calculatedPrice = pricePerUnit || fiatAmount / cryptoAmount;
+    const cryptoAmountNum = Number(cryptoAmount);
+    const fiatAmountNum = Number(fiatAmount);
+    const pricePerUnitNum = pricePerUnit ? Number(pricePerUnit) : null;
+    const calculatedPrice = pricePerUnitNum ?? fiatAmountNum / cryptoAmountNum;
 
     // Validar que el seller existe y está activo
     const seller = await this.usersService.getProfile(sellerId);
@@ -53,18 +62,26 @@ export class OrdersService {
     // Crear la orden
     const order = this.orderRepository.create({
       sellerId,
-      cryptoAmount,
+      cryptoAmount: cryptoAmountNum,
       cryptoCurrency: cryptoCurrency.toUpperCase(),
-      fiatAmount,
+      fiatAmount: fiatAmountNum,
       fiatCurrency: fiatCurrency.toUpperCase(),
       pricePerUnit: calculatedPrice,
       paymentMethod,
       terms,
       expiresAt: expiresAt ? new Date(expiresAt) : null,
       status: OrderStatus.CREATED,
+      chainId,
+      tokenAddress,
+      blockchain,
     });
 
     const savedOrder = await this.orderRepository.save(order);
+
+    const savedOrderWithRelations = await this.orderRepository.findOne({
+      where: { id: savedOrder.id },
+      relations: ['seller', 'buyer'],
+    });
 
     this.logger.log(
       `Order created: ${savedOrder.id} by seller ${sellerId}`,
@@ -80,7 +97,7 @@ export class OrdersService {
       },
     });
 
-    return this.toResponseDto(savedOrder);
+    return this.toResponseDto(savedOrderWithRelations || savedOrder);
   }
 
   /**
@@ -132,6 +149,11 @@ export class OrdersService {
 
     const savedOrder = await this.orderRepository.save(order);
 
+    const savedOrderWithRelations = await this.orderRepository.findOne({
+      where: { id: savedOrder.id },
+      relations: ['seller', 'buyer'],
+    });
+
     this.logger.log(
       `Order accepted: ${orderId} by buyer ${buyerId}`,
     );
@@ -143,7 +165,7 @@ export class OrdersService {
       },
     });
 
-    return this.toResponseDto(savedOrder);
+    return this.toResponseDto(savedOrderWithRelations || savedOrder);
   }
 
   /**
@@ -185,6 +207,11 @@ export class OrdersService {
 
     const savedOrder = await this.orderRepository.save(order);
 
+    const savedOrderWithRelations = await this.orderRepository.findOne({
+      where: { id: savedOrder.id },
+      relations: ['seller', 'buyer'],
+    });
+
     // Actualizar reputation (penalización por cancelar)
     if (cancelledBy === 'SELLER') {
       await this.usersService.updateReputationScore(order.sellerId, -10);
@@ -204,7 +231,7 @@ export class OrdersService {
       },
     });
 
-    return this.toResponseDto(savedOrder);
+    return this.toResponseDto(savedOrderWithRelations || savedOrder);
   }
 
   /**
@@ -235,11 +262,16 @@ export class OrdersService {
     order.status = OrderStatus.ONCHAIN_LOCKED;
     const savedOrder = await this.orderRepository.save(order);
 
+    const savedOrderWithRelations = await this.orderRepository.findOne({
+      where: { id: savedOrder.id },
+      relations: ['seller', 'buyer'],
+    });
+
     this.logger.log(
       `Order marked as on-chain locked: ${orderId}${userId ? ` by user ${userId}` : ' (automatic)'}`,
     );
 
-    return this.toResponseDto(savedOrder);
+    return this.toResponseDto(savedOrderWithRelations || savedOrder);
   }
 
   /**
@@ -249,6 +281,12 @@ export class OrdersService {
     const validTransitions: Record<OrderStatus, OrderStatus[]> = {
       [OrderStatus.CREATED]: [
         OrderStatus.AWAITING_FUNDS,
+        OrderStatus.PENDING_APPROVAL,
+        OrderStatus.REFUNDED,
+      ],
+      [OrderStatus.PENDING_APPROVAL]: [
+        OrderStatus.AWAITING_FUNDS,
+        OrderStatus.ONCHAIN_LOCKED,
         OrderStatus.REFUNDED,
       ],
       [OrderStatus.AWAITING_FUNDS]: [
@@ -306,15 +344,21 @@ export class OrdersService {
 
     this.logger.log(`Order completed: ${orderId} by ${completedBy}`);
 
-    return this.toResponseDto(savedOrder);
+    const savedOrderWithRelations = await this.orderRepository.findOne({
+      where: { id: savedOrder.id },
+      relations: ['seller', 'buyer'],
+    });
+
+    return this.toResponseDto(savedOrderWithRelations || savedOrder);
   }
 
   /**
    * Marca una orden como disputada
    */
-  async markAsDisputed(orderId: string): Promise<OrderResponseDto> {
+  async markAsDisputed(orderId: string, userId: string): Promise<OrderResponseDto> {
     const order = await this.orderRepository.findOne({
       where: { id: orderId },
+      relations: ['seller', 'buyer'],
     });
 
     if (!order) {
@@ -332,12 +376,39 @@ export class OrdersService {
       );
     }
 
+    if (order.sellerId !== userId && order.buyerId !== userId) {
+      throw new ForbiddenException('No tienes permiso para disputar esta orden');
+    }
+
     order.status = OrderStatus.DISPUTED;
+    order.disputedAt = new Date();
     const savedOrder = await this.orderRepository.save(order);
+
+    const existingDispute = await this.disputeRepository.findOne({
+      where: { orderId },
+    });
+
+    if (!existingDispute) {
+      const respondentId =
+        order.sellerId === userId ? order.buyerId : order.sellerId;
+      const dispute = this.disputeRepository.create({
+        orderId,
+        initiatorId: userId,
+        respondentId,
+        reason: 'Dispute opened',
+        status: DisputeStatus.OPEN,
+      });
+      await this.disputeRepository.save(dispute);
+    }
 
     this.logger.log(`Order marked as disputed: ${orderId}`);
 
-    return this.toResponseDto(savedOrder);
+    const savedOrderWithRelations = await this.orderRepository.findOne({
+      where: { id: savedOrder.id },
+      relations: ['seller', 'buyer'],
+    });
+
+    return this.toResponseDto(savedOrderWithRelations || savedOrder);
   }
 
   /**
@@ -381,6 +452,7 @@ export class OrdersService {
       where,
       skip,
       take: limit,
+      relations: ['seller', 'buyer'],
       order: {
         createdAt: 'DESC',
       },
@@ -401,6 +473,7 @@ export class OrdersService {
   async findOne(id: string): Promise<OrderResponseDto> {
     const order = await this.orderRepository.findOne({
       where: { id },
+      relations: ['seller', 'buyer'],
     });
 
     if (!order) {
@@ -417,7 +490,15 @@ export class OrdersService {
     userId: string,
     role: 'seller' | 'buyer' | 'both' = 'both',
     status?: OrderStatus,
-  ): Promise<OrderResponseDto[]> {
+    page: number = 1,
+    limit: number = 20,
+  ): Promise<{
+    data: OrderResponseDto[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
     const where: FindOptionsWhere<Order>[] = [];
 
     if (role === 'seller' || role === 'both') {
@@ -427,40 +508,75 @@ export class OrdersService {
       where.push({ buyerId: userId, ...(status && { status }) });
     }
 
-    const orders = await this.orderRepository.find({
+    const skip = (page - 1) * limit;
+
+    const [orders, total] = await this.orderRepository.findAndCount({
       where: where.length > 1 ? (where as any) : where[0],
+      skip,
+      take: limit,
+      relations: ['seller', 'buyer'],
       order: {
         createdAt: 'DESC',
       },
     });
 
-    return orders.map((order) => this.toResponseDto(order));
+    return {
+      data: orders.map((order) => this.toResponseDto(order)),
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   /**
    * Convierte Order a DTO de respuesta
    */
   private toResponseDto(order: Order): OrderResponseDto {
+    const seller = order.seller
+      ? {
+          id: order.seller.id,
+          wallet_address: order.seller.walletAddress,
+          reputation_score: Number(order.seller.reputationScore),
+        }
+      : undefined;
+
+    const buyer = order.buyer
+      ? {
+          id: order.buyer.id,
+          wallet_address: order.buyer.walletAddress,
+          reputation_score: Number(order.buyer.reputationScore),
+        }
+      : order.buyerId
+      ? null
+      : null;
+
     return plainToInstance(OrderResponseDto, {
       id: order.id,
-      seller_id: order.sellerId,
-      buyer_id: order.buyerId,
-      crypto_amount: Number(order.cryptoAmount),
-      crypto_currency: order.cryptoCurrency,
-      fiat_amount: Number(order.fiatAmount),
-      fiat_currency: order.fiatCurrency,
-      price_per_unit: order.pricePerUnit ? Number(order.pricePerUnit) : null,
+      sellerId: order.sellerId,
+      buyerId: order.buyerId,
+      seller,
+      buyer,
+      cryptoAmount: order.cryptoAmount?.toString(),
+      cryptoCurrency: order.cryptoCurrency,
+      fiatAmount: order.fiatAmount?.toString(),
+      fiatCurrency: order.fiatCurrency,
+      pricePerUnit: order.pricePerUnit ? order.pricePerUnit.toString() : null,
       status: order.status,
-      escrow_id: order.escrowId,
-      payment_method: order.paymentMethod,
+      escrowId: order.escrowId,
+      paymentMethod: order.paymentMethod,
       terms: order.terms,
-      expires_at: order.expiresAt,
-      accepted_at: order.acceptedAt,
-      completed_at: order.completedAt,
-      cancelled_at: order.cancelledAt,
-      cancelled_by: order.cancelledBy,
-      created_at: order.createdAt,
-      updated_at: order.updatedAt,
+      expiresAt: order.expiresAt,
+      acceptedAt: order.acceptedAt,
+      completedAt: order.completedAt,
+      cancelledAt: order.cancelledAt,
+      cancelledBy: order.cancelledBy,
+      disputedAt: order.disputedAt,
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt,
+      blockchain: order.blockchain,
+      tokenAddress: order.tokenAddress,
+      chainId: order.chainId,
     });
   }
 }

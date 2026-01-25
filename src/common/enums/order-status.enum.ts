@@ -34,6 +34,13 @@ export enum OrderStatus {
   AWAITING_FUNDS = 'AWAITING_FUNDS',
 
   /**
+   * Pendiente de aprobación (opcional)
+   *
+   * Estado intermedio cuando se requiere aprobación manual.
+   */
+  PENDING_APPROVAL = 'PENDING_APPROVAL',
+
+  /**
    * Fondos bloqueados on-chain
    * 
    * Los fondos han sido bloqueados en el contrato escrow.
@@ -78,7 +85,13 @@ export enum OrderStatus {
 export const VALID_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
   [OrderStatus.CREATED]: [
     OrderStatus.AWAITING_FUNDS,
+    OrderStatus.PENDING_APPROVAL,
     OrderStatus.REFUNDED, // Puede cancelarse antes de aceptar
+  ],
+  [OrderStatus.PENDING_APPROVAL]: [
+    OrderStatus.AWAITING_FUNDS,
+    OrderStatus.ONCHAIN_LOCKED,
+    OrderStatus.REFUNDED,
   ],
   [OrderStatus.AWAITING_FUNDS]: [
     OrderStatus.ONCHAIN_LOCKED,
@@ -110,6 +123,7 @@ export const FINAL_STATUSES: OrderStatus[] = [
  */
 export const ACTIVE_STATUSES: OrderStatus[] = [
   OrderStatus.CREATED,
+  OrderStatus.PENDING_APPROVAL,
   OrderStatus.AWAITING_FUNDS,
   OrderStatus.ONCHAIN_LOCKED,
   OrderStatus.DISPUTED,
@@ -162,6 +176,7 @@ export class OrderStatusUtil {
     const descriptions: Record<OrderStatus, string> = {
       [OrderStatus.CREATED]: 'Orden creada, esperando aceptación',
       [OrderStatus.AWAITING_FUNDS]: 'Orden aceptada, esperando fondos en escrow',
+      [OrderStatus.PENDING_APPROVAL]: 'Orden pendiente de aprobación',
       [OrderStatus.ONCHAIN_LOCKED]: 'Fondos bloqueados en escrow on-chain',
       [OrderStatus.COMPLETED]: 'Orden completada exitosamente',
       [OrderStatus.REFUNDED]: 'Orden cancelada/reembolsada',
@@ -184,6 +199,11 @@ export class OrderStatusUtil {
         label: 'Creada',
         color: '#6B7280',
         variant: 'default',
+      },
+      [OrderStatus.PENDING_APPROVAL]: {
+        label: 'Pendiente de Aprobación',
+        color: '#F59E0B',
+        variant: 'warning',
       },
       [OrderStatus.AWAITING_FUNDS]: {
         label: 'Esperando Fondos',

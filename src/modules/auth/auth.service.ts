@@ -129,6 +129,10 @@ export class AuthService {
       user: {
         id: user.id,
         walletAddress: user.walletAddress,
+        reputationScore: Number(user.reputationScore),
+        isActive: user.isActive,
+        loginCount: user.loginCount,
+        lastLoginAt: user.lastLoginAt,
         createdAt: user.createdAt,
       },
     };

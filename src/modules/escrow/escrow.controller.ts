@@ -98,12 +98,12 @@ export class EscrowController {
 
   /**
    * Actualiza el estado del escrow (cuando se ejecutan transacciones en blockchain)
-   * PUT /api/escrow/:escrowId
+   * PUT /api/escrow/:id
    */
-  @Put(':escrowId')
+  @Put(':id')
   @HttpCode(HttpStatus.OK)
   async update(
-    @Param('escrowId') escrowId: string,
+    @Param('id') escrowId: string,
     @Body() updateEscrowDto: UpdateEscrowDto,
   ) {
     return this.escrowService.update(escrowId, updateEscrowDto);
