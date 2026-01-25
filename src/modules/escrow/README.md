@@ -1,6 +1,6 @@
 # Módulo de Escrow
 
-Puente lógico entre órdenes y blockchain. Mapea `order_id ↔ escrow_id` y valida consistencia.
+Puente lógico entre órdenes y escrow. Mapea `order_id ↔ escrow_id` y valida consistencia. Funciona **con** blockchain (on-chain) o **sin** blockchain (modo off-chain / manual).
 
 ## Características
 
@@ -9,15 +9,27 @@ Puente lógico entre órdenes y blockchain. Mapea `order_id ↔ escrow_id` y val
 - ✅ Sincronización de estados
 - ✅ **NO ejecuta transacciones blockchain** (solo mapeo y validación)
 - ✅ Validación de datos (cantidad, moneda, estados)
+- ✅ **Modo off-chain**: usar `contractAddress: 'OFF_CHAIN'` cuando no hay blockchain
 
 ## Principio Fundamental
 
 **Este módulo NO ejecuta transacciones blockchain.** Solo actúa como:
-- Registro del mapeo entre órdenes off-chain y escrows on-chain
+- Registro del mapeo entre órdenes y escrows (on-chain u off-chain)
 - Validador de consistencia entre ambos sistemas
 - Sincronizador de estados
 
-Las transacciones blockchain se ejecutan en otro módulo (blockchain service).
+Las transacciones on-chain (si se usan) las ejecuta el frontend; este módulo solo registra y actualiza estados.
+
+## Modo sin blockchain (off-chain)
+
+Cuando no hay blockchain configurado:
+
+1. **Crear escrow**: `POST /api/escrow` con `contractAddress: 'OFF_CHAIN'`, `escrowId` = UUID generado en frontend, `createTransactionHash` opcional.
+2. **Fondos bloqueados**: `PUT /api/escrow/:id` con `{ "status": "LOCKED" }` (actualiza la orden a ONCHAIN_LOCKED).
+3. **Completar**: `PUT /api/escrow/:id` con `{ "status": "RELEASED" }`.
+4. **Reembolso**: `PUT /api/escrow/:id` con `{ "status": "REFUNDED" }`.
+
+Alternativa **sin usar escrow**: usar solo Orders: `PUT /api/orders/:id/mark-locked`, `POST /api/orders/:id/complete`, `POST /api/orders/:id/cancel`. El consistency-check permite órdenes en ONCHAIN_LOCKED/COMPLETED/REFUNDED sin `escrowId` en modo sin blockchain.
 
 ## Estructura de Datos
 

@@ -4,19 +4,13 @@ Sistema de jobs críticos con resiliencia que sobrevive a reinicios.
 
 ## Jobs Críticos
 
-### 1. Re-sync Blockchain
-- **Frecuencia**: Cada minuto
-- **Crítico**: Sí
-- **Resiliente**: Sí
-- **Descripción**: Sincroniza eventos de blockchain y reconcilia estados
-
-### 2. Limpieza de Órdenes Expiradas
+### 1. Limpieza de Órdenes Expiradas
 - **Frecuencia**: Cada hora
 - **Crítico**: Sí
 - **Resiliente**: Sí
 - **Descripción**: Cancela automáticamente órdenes expiradas
 
-### 3. Verificación de Inconsistencias
+### 2. Verificación de Inconsistencias
 - **Frecuencia**: Cada 30 minutos
 - **Crítico**: Sí
 - **Resiliente**: Sí
@@ -63,26 +57,8 @@ const state = await jobTracker.getJobState('job-name');
 Se ejecuta automáticamente al iniciar el módulo:
 - Libera locks huérfanos
 - Recupera estados guardados
-- Re-sincroniza blockchain si es necesario
 
 ## Jobs Implementados
-
-### BlockchainSyncJob
-
-**Tareas:**
-- Sincronización continua (cada minuto)
-- Verificación de estado (cada 5 minutos)
-- Reconciliación profunda (cada hora)
-
-**Resiliencia:**
-- Guarda último bloque sincronizado
-- Re-sincroniza desde último bloque conocido después de reinicio
-- Lock distribuido previene ejecuciones concurrentes
-
-**Ejemplo de uso manual:**
-```typescript
-await blockchainSyncJob.emergencyResync(fromBlock);
-```
 
 ### CleanupJob
 
@@ -116,12 +92,7 @@ await blockchainSyncJob.emergencyResync(fromBlock);
 
 ### Ejecutar Job Manualmente
 
-```typescript
-import { BlockchainSyncJob } from '@/jobs';
-
-// Re-sincronización de emergencia
-await blockchainSyncJob.emergencyResync(fromBlock);
-```
+Los jobs se ejecutan por cron; para forzar una ejecución se puede invocar el método del job correspondiente si está expuesto (p. ej. en un endpoint de admin).
 
 ### Verificar Estado de Job
 
@@ -129,13 +100,13 @@ await blockchainSyncJob.emergencyResync(fromBlock);
 import { JobTrackerService } from '@/jobs';
 
 // Última ejecución
-const lastExecution = await jobTracker.getLastExecution('blockchain-sync');
+const lastExecution = await jobTracker.getLastExecution('consistency-check');
 
 // Estado guardado
-const state = await jobTracker.getJobState('blockchain-sync');
+const state = await jobTracker.getJobState('consistency-check');
 
 // Verificar si está en ejecución
-const isRunning = await jobTracker.isJobRunning('blockchain-sync');
+const isRunning = await jobTracker.isJobRunning('consistency-check');
 ```
 
 ### Crear Nuevo Job
@@ -202,7 +173,6 @@ export class MyJob {
 1. **Al iniciar**: `JobRecoveryService.onModuleInit()` se ejecuta
 2. **Libera locks**: Elimina locks huérfanos de reinicios anteriores
 3. **Recupera estado**: Obtiene estados guardados de Redis
-4. **Re-sincroniza**: Si es necesario, re-sincroniza blockchain
 
 ### Estado Guardado
 

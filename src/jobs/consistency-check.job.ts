@@ -57,6 +57,10 @@ export class ConsistencyCheckJob {
         ],
       });
 
+      // Sin blockchain: las órdenes pueden llegar a ONCHAIN_LOCKED/COMPLETED/REFUNDED
+      // con o sin escrow (vía mark-locked/complete/cancel o vía escrow off-chain).
+      // Solo validamos consistencia cuando existe escrowId; si no hay escrowId, se asume
+      // flujo manual/sin blockchain y no se marca como inconsistencia.
       for (const order of ordersWithEscrow) {
         if (order.escrowId) {
           try {
@@ -69,13 +73,6 @@ export class ConsistencyCheckJob {
           } catch (error) {
             issues.push(`Order ${order.id}: Error validating - ${error.message}`);
           }
-        } else if (
-          order.status === OrderStatus.ONCHAIN_LOCKED ||
-          order.status === OrderStatus.COMPLETED
-        ) {
-          issues.push(
-            `Order ${order.id}: Status ${order.status} but no escrowId`,
-          );
         }
       }
 
@@ -91,9 +88,10 @@ export class ConsistencyCheckJob {
       }
 
       // 3. Verificar estados inconsistentes
+      // order.escrowId es una columna string, no una relación; hay que hacer JOIN manual con escrows
       const inconsistentOrders = await this.orderRepository
         .createQueryBuilder('order')
-        .leftJoinAndSelect('order.escrowId', 'escrow')
+        .innerJoin(Escrow, 'escrow', 'escrow.escrow_id = order.escrow_id')
         .where('order.status = :status1', { status1: OrderStatus.ONCHAIN_LOCKED })
         .andWhere('escrow.status != :escrowStatus', {
           escrowStatus: EscrowStatus.LOCKED,
