@@ -27,6 +27,7 @@ import { LaunchpadModule } from './modules/launchpad/launchpad.module';
 // ============================================
 import { DatabaseModule } from './database/database.module';
 import { AuditModule } from './common/audit/audit.module';
+import { HealthModule } from './common/health/health.module';
 
 /**
  * Módulo raíz de la aplicación
@@ -82,6 +83,9 @@ import { AuditModule } from './common/audit/audit.module';
 
     // AuditModule - Sistema de auditoría de seguridad
     AuditModule,
+
+    // HealthModule - Health check (/api/health, /api/health/ready, /api/health/live)
+    HealthModule,
 
     // ============================================
     // MÓDULOS DE APLICACIÓN
