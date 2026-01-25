@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import {
   Injectable,
   NotFoundException,
@@ -676,6 +677,7 @@ export class LaunchpadService implements OnModuleInit {
 
   private createDefaultAudit(address: string): LaunchpadAudit {
     return this.auditRepository.create({
+      id: randomUUID(),
       projectIcon: '🛡️',
       projectName: 'Unknown Project',
       contractAddress: address,
@@ -732,6 +734,7 @@ export class LaunchpadService implements OnModuleInit {
     const gemCount = await this.gemRepository.count();
     if (gemCount === 0) {
       const gem = this.gemRepository.create({
+        id: randomUUID(),
         projectIcon: '💎',
         projectName: 'Example Gem',
         description: 'Sample gem for launchpad.',
@@ -755,6 +758,7 @@ export class LaunchpadService implements OnModuleInit {
     const featuredCount = await this.featuredRepository.count();
     if (featuredCount === 0) {
       const featured = this.featuredRepository.create({
+        id: randomUUID(),
         projectName: 'Featured Gem',
         subtitle: 'Launchpad Spotlight',
         description: 'Featured presale project.',
@@ -774,6 +778,7 @@ export class LaunchpadService implements OnModuleInit {
     const presaleCount = await this.presaleRepository.count();
     if (presaleCount === 0) {
       const presale = this.presaleRepository.create({
+        id: randomUUID(),
         projectName: 'Sample Presale',
         projectDescription: 'Sample presale description.',
         projectIcon: '🧪',
@@ -803,6 +808,7 @@ export class LaunchpadService implements OnModuleInit {
     const tokenCount = await this.tokenRepository.count();
     if (tokenCount === 0) {
       const token = this.tokenRepository.create({
+        id: randomUUID(),
         projectIcon: '💎',
         projectName: 'Example Gem',
         symbol: 'GEM',
