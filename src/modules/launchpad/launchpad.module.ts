@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { LaunchpadController } from './launchpad.controller';
 import { LaunchpadService } from './launchpad.service';
 import { LaunchpadGateway } from './launchpad.gateway';
+import { AuthModule } from '../auth/auth.module';
 import { LaunchpadGem } from '../../database/entities/launchpad-gem.entity';
 import { LaunchpadFeaturedGem } from '../../database/entities/launchpad-featured-gem.entity';
 import { LaunchpadPresale } from '../../database/entities/launchpad-presale.entity';
@@ -18,6 +19,7 @@ import { LaunchpadTokenVote } from '../../database/entities/launchpad-token-vote
 
 @Module({
   imports: [
+    AuthModule,
     TypeOrmModule.forFeature([
       LaunchpadGem,
       LaunchpadFeaturedGem,
