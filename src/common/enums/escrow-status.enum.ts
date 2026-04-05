@@ -1,8 +1,0 @@
-export enum EscrowStatus {
-  PENDING = 'PENDING',
-  LOCKED = 'LOCKED',
-  RELEASED = 'RELEASED',
-  REFUNDED = 'REFUNDED',
-  DISPUTED = 'DISPUTED',
-}
-

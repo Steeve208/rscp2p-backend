@@ -1,40 +1,58 @@
-version: '3.8'
+version: "3.9"
 
 services:
-  postgres:
-    image: postgres:14-alpine
-    container_name: rsc-postgres
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: rsc_db
+      ENVIRONMENT: production
+      DATABASE_URL: postgresql://rsc:rsc_secret@postgres:5432/rsc_p2p
+      REDIS_URL: redis://redis:6379/0
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET:-}
+      RPC_URL: ${RPC_URL:-}
+      CHAIN_ID: ${CHAIN_ID:-1}
+      MIN_CONFIRMATIONS: ${MIN_CONFIRMATIONS:-12}
+      ADMIN_WALLET_ADDRESSES: ${ADMIN_WALLET_ADDRESSES:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: rsc
+      POSTGRES_PASSWORD: rsc_secret
+      POSTGRES_DB: rsc_p2p
+    volumes:
+      - pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
+      test: ["CMD-SHELL", "pg_isready -U rsc -d rsc_p2p"]
+      interval: 5s
+      timeout: 3s
       retries: 5
     restart: unless-stopped
 
   redis:
     image: redis:7-alpine
-    container_name: rsc-redis
     ports:
       - "6379:6379"
     volumes:
-      - redis_data:/data
-    command: redis-server --appendonly yes
+      - redisdata:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
+      interval: 5s
+      timeout: 3s
       retries: 5
     restart: unless-stopped
 
 volumes:
-  postgres_data:
-  redis_data:
-
+  pgdata:
+  redisdata:

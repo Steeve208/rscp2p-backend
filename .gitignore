@@ -1,44 +1,47 @@
-# compiled output
-/dist
-/node_modules
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# Logs
-logs
-*.log
-npm-debug.log*
-pnpm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-lerna-debug.log*
+# Entorno virtual
+.venv/
+venv/
+ENV/
+env/
 
-# OS
-.DS_Store
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
 
-# Tests
-/coverage
-/.nyc_output
-
-# IDEs and editors
-/.idea
-.project
-.classpath
-.c9/
-*.launch
-.settings/
-*.sublime-workspace
-
-# IDE - VSCode
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-
-# Environment
+# Env
 .env
 .env.local
 .env.*.local
 
-# Build
-*.tsbuildinfo
+# SQLite local
+*.db
 
+# Logs y tests
+*.log
+.pytest_cache/
+.coverage
+htmlcov/

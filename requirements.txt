@@ -1,0 +1,33 @@
+# RSC P2P Backend - Python
+# API y WebSocket para terminal de finanzas
+
+# Framework
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+
+# Config y validación
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+python-dotenv>=1.0.0
+
+# WebSocket / tiempo real
+websockets>=12.0
+python-socketio>=5.10.0
+
+# CORS y middleware
+python-multipart>=0.0.6
+
+# Base de datos (Launchpad + Marketplace producción)
+sqlalchemy>=2.0.0
+alembic>=1.13.0
+psycopg2-binary>=2.9.9
+
+# Seguridad / JWT y auth (Face ID flow: challenge/verify + JWT)
+pyjwt>=2.8.0
+eth-account>=0.10.0
+
+# Redis (rate limiting distribuido, Socket.IO adapter, cache)
+redis[hiredis]>=5.0.0
+
+# Utilidades
+httpx>=0.26.0

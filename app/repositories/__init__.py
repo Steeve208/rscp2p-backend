@@ -1,0 +1,1 @@
+# Repositories: persistence of aggregates.
