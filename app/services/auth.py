@@ -8,8 +8,6 @@ from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
 import jwt
-from eth_account import Account
-from eth_account.messages import encode_defunct
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
@@ -21,8 +19,7 @@ from app.schemas.auth import (
     UserResponse,
     VerifyResponse,
 )
-
-Account.enable_unaudited_hdwallet_features()
+from app.utils.eip191_verify import recover_checksum_address
 
 MESSAGE_TEMPLATE = "Login to RSC P2P Terminal\nNonce: {nonce}"
 NONCE_TTL_MINUTES = 5
@@ -77,8 +74,7 @@ def verify(db: Session, wallet_address: str, nonce: str, signature: str) -> Veri
     db.commit()
     message = MESSAGE_TEMPLATE.format(nonce=nonce)
     try:
-        message_encoded = encode_defunct(text=message)
-        recovered = Account.recover_message(message_encoded, signature=signature)
+        recovered = recover_checksum_address(text_message=message, signature=signature)
         if recovered.lower() != wallet_address:
             return None
     except Exception:

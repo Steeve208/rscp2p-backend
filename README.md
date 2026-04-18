@@ -51,10 +51,20 @@ pip install -r requirements.txt
 .\run.ps1
 ```
 
+(`run.ps1` arranca **sin** `--reload` para evitar en Windows `PermissionError: [WinError 5] Acceso denegado` en `CreateNamedPipe` del reloader nativo de uvicorn.)
+
+Recarga al guardar cambios en código:
+
+```powershell
+.\run-reload.ps1
+```
+
+En **Windows**, `run-reload.ps1` usa **watchdog** (`watchmedo`): reinicia uvicorn al cambiar `.py` bajo `app/`, sin el reloader multiproceso de uvicorn. En Linux/macOS sigue usando `uvicorn --reload`.
+
 O manualmente:
 ```bash
 .\.venv\Scripts\activate
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
 - API base: http://localhost:8000/api
@@ -70,13 +80,12 @@ pip install -r requirements.txt
 
 Luego vuelve a ejecutar `.\run.ps1`.
 
-## Si "run.ps1" da PermissionError o "Acceso denegado" (reloader)
+## Si aún ves PermissionError / CreateNamedPipe
 
-Usa el script sin recarga automática:
+No uses **`uvicorn ... --reload`** a mano en Windows. Arranca con **`.\run.ps1`** o **`.\run-reload.ps1`** (este último ya evita ese reloader en Windows). Si quedó un proceso colgado: **`.\stop.ps1`**.
 
-```powershell
-.\run-no-reload.ps1
-```
+(`run-no-reload.ps1` es equivalente a `run.ps1`.)
+
 - Docs: http://localhost:8000/docs
 - Health: GET /api/health
 - Órdenes: GET /api/orders, GET /api/orders/:id
@@ -101,6 +110,6 @@ p2p-backend/
     websocket/           # socketio (order:*, alert:new)
   requirements.txt
   .env.example
-  install.ps1, run.ps1
+  install.ps1, run.ps1, run-reload.ps1, run-no-reload.ps1
   README.md
 ```

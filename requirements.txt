@@ -31,3 +31,6 @@ redis[hiredis]>=5.0.0
 
 # Utilidades
 httpx>=0.26.0
+
+# Recarga en desarrollo (Windows: usado por run-reload.ps1 con watchmedo; evita --reload de uvicorn)
+watchdog>=4.0,<5

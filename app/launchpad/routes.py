@@ -314,14 +314,6 @@ def post_submission(
     return {"data": created}
 
 
-@router.get("/submissions/{submission_id}", response_model=None)
-def get_submission(submission_id: str, db: Session = Depends(get_db), user: UserResponse = Depends(get_current_user)):
-    sub = svc.get_submission(db, submission_id, user.walletAddress)
-    if sub is None:
-        raise HTTPException(status_code=404, detail="Submission not found")
-    return {"data": sub}
-
-
 @router.get("/submissions/mine", response_model=None)
 def list_submissions_mine(
     db: Session = Depends(get_db),
@@ -331,6 +323,14 @@ def list_submissions_mine(
 ):
     items, total = svc.list_submissions_mine(db, user.walletAddress, page=page, limit=limit)
     return _paginated(items, total, page, limit)
+
+
+@router.get("/submissions/{submission_id}", response_model=None)
+def get_submission(submission_id: str, db: Session = Depends(get_db), user: UserResponse = Depends(get_current_user)):
+    sub = svc.get_submission(db, submission_id, user.walletAddress)
+    if sub is None:
+        raise HTTPException(status_code=404, detail="Submission not found")
+    return {"data": sub}
 
 
 # ----- Admin: revisiones de envíos al Launchpad -----

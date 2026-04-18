@@ -1,4 +1,6 @@
 # RSC P2P Backend - Arrancar servidor (Windows)
+# Sin --reload: evita PermissionError [WinError 5] en CreateNamedPipe (multiprocessing).
+# Recarga automática: .\run-reload.ps1 (solo si tu entorno no falla con el reloader).
 # Ejecutar: .\run.ps1
 
 $ErrorActionPreference = "Stop"
@@ -10,4 +12,4 @@ if (-not (Test-Path ".venv")) {
 }
 
 .\.venv\Scripts\Activate.ps1
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+uvicorn app.main:app --host 0.0.0.0 --port 8000

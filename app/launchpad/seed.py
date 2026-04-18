@@ -9,7 +9,7 @@ from uuid import uuid4
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.db import Base, SessionLocal, engine
+from app.db import Base, SessionLocal, engine, ensure_launchpad_presale_status_column
 from app.launchpad.models import (
     AuditModel,
     GemModel,
@@ -181,6 +181,7 @@ def init_db() -> None:
     from app.models import marketplace  # noqa: F401 - orders, escrows, disputes, users
 
     Base.metadata.create_all(bind=engine)
+    ensure_launchpad_presale_status_column()
     db = SessionLocal()
     try:
         run_seed(db)

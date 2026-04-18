@@ -17,7 +17,12 @@ class Settings(BaseSettings):
 
     host: str = "0.0.0.0"
     port: int = 8000
-    cors_origins: str = "http://localhost:3000"
+    # Desarrollo local + orígenes típicos del sitio (ajuste CORS_ORIGINS en producción).
+    cors_origins: str = (
+        "http://localhost:3000,http://127.0.0.1:3000,"
+        "http://p2prsc.xyz,https://p2prsc.xyz,"
+        "http://www.p2prsc.xyz,https://www.p2prsc.xyz"
+    )
 
     # JWT (auth Face ID: challenge/verify + JWT). En producción JWT_SECRET es obligatorio.
     jwt_secret: str = "change-me-in-production"

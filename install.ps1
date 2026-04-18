@@ -34,9 +34,10 @@ if (-not (Test-Path ".venv")) {
     & $pythonExe -m venv .venv
 }
 
-# Activar e instalar
+# Activar e instalar (pip del venv con python -m evita ERROR al actualizar pip en Windows)
 .\.venv\Scripts\Activate.ps1
-pip install --upgrade pip
-pip install -r requirements.txt
+$venvPy = Join-Path $PSScriptRoot '.venv\Scripts\python.exe'
+& $venvPy -m pip install --upgrade pip
+& $venvPy -m pip install -r requirements.txt
 
-Write-Host "Listo. Para arrancar el backend: .\.venv\Scripts\Activate.ps1; uvicorn app.main:app --reload --host 0.0.0.0 --port 8000"
+Write-Host "Listo. Para arrancar: .\run.ps1  |  Para detener: .\stop.ps1"
