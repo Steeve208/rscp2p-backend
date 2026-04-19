@@ -113,3 +113,5 @@ p2p-backend/
   install.ps1, run.ps1, run-reload.ps1, run-no-reload.ps1
   README.md
 ```
+
+_(Commit de prueba de despliegue / CI — ignorar si no aplica.)_
