@@ -52,6 +52,10 @@ class Settings(BaseSettings):
     chain_id: int = 1
     min_confirmations: int = 12
 
+    # Wallet token discovery (EVM multi-chain)
+    # Uses Covalent balances API: https://www.covalenthq.com/
+    covalent_api_key: str = ""
+
     @property
     def cors_origins_list(self) -> list[str]:
         if self.cors_origins.strip() == "*":

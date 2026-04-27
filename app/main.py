@@ -17,7 +17,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import auth, health, orders
+from app.api.routes import auth, health, orders, wallet
 from app.api.routes.deposits import router as deposits_router
 from app.api.routes.escrow import router as escrow_router
 from app.api.routes.users import router as users_router
@@ -247,6 +247,7 @@ api_router = APIRouter(prefix="/api")
 api_router.include_router(health.router)
 api_router.include_router(auth.router)
 api_router.include_router(orders.router)
+api_router.include_router(wallet.router)
 api_router.include_router(escrow_router)
 api_router.include_router(deposits_router)
 api_router.include_router(users_router)
