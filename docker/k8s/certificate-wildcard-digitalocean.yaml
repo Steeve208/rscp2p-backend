@@ -1,0 +1,23 @@
+# Same as certificate-wildcard.yaml but uses DigitalOcean DNS issuer.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: rsc-gateway-wildcard-tls
+  namespace: rsc-gateway
+  labels:
+    app.kubernetes.io/name: rsc-gateway
+spec:
+  secretName: rsc-gateway-wildcard-tls
+  issuerRef:
+    name: letsencrypt-prod-dns-digitalocean
+    kind: ClusterIssuer
+  dnsNames:
+    - "*.example.com"
+    - example.com
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  renewBefore: 720h
+  usages:
+    - digital signature
+    - key encipherment

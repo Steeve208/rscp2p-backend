@@ -1,0 +1,183 @@
+# =============================================================================
+# rsc-gateway — Cargo manifest
+# =============================================================================
+# Responsibility: dependencies, feature flags, compile profiles, release tuning.
+# Business logic lives in internal/ and routes/ — not here.
+#
+# Build:
+#   dev:     cargo build
+#   release: cargo build --release
+#   staging: cargo build --profile staging   # faster CI/staging images
+# =============================================================================
+
+[package]
+name = "rsc-gateway"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75"
+authors = ["RSC Chain"]
+description = "RSC Gateway API — fintech backend (auth, wallets, payments, fiat, swaps)"
+license = "MIT"
+keywords = ["fintech", "payments", "axum", "gateway"]
+categories = ["web-programming::http-server", "finance"]
+
+[lib]
+path = "lib.rs"
+
+[[bin]]
+name = "rsc-gateway"
+path = "cmd/main.rs"
+
+# Production safety: no unsafe in application code
+[lints.rust]
+unsafe_code = "forbid"
+
+# =============================================================================
+# Dependencies
+# =============================================================================
+
+[dependencies]
+
+# --- Async runtime ---
+tokio = { version = "1", features = [
+    "macros",
+    "rt-multi-thread",
+    "net",
+    "time",
+    "sync",
+    "io-util",
+] }
+
+# --- HTTP server ---
+axum = { version = "0.7", features = ["macros"] }
+tower = { version = "0.5", features = ["timeout", "util"] }
+tower-http = { version = "0.5", features = [
+    "cors",
+    "trace",
+    "compression-full",
+    "timeout",
+] }
+
+# --- Serialization ---
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# --- Persistence ---
+sqlx = { version = "0.7", features = [
+    "runtime-tokio-rustls",
+    "postgres",
+    "uuid",
+    "chrono",
+    "migrate",
+    "rust_decimal",
+] }
+redis = { version = "0.25", features = ["tokio-comp", "connection-manager"] }
+
+# --- Auth & crypto ---
+jsonwebtoken = "9"
+argon2 = "0.5"
+totp-rs = { version = "5", features = ["gen_secret", "otpauth"] }
+aes-gcm = "0.10"
+hmac = "0.12"
+md5 = "0.7"
+sha2 = "0.10"
+rand = "0.8"
+base64 = "0.22"
+hex = "0.4"
+
+# --- Domain primitives (money: never f64) ---
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+rust_decimal = { version = "1", features = ["serde"] }
+
+# --- Observability ---
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+tracing-opentelemetry = "0.28"
+metrics = "0.24"
+metrics-exporter-prometheus = "0.16"
+opentelemetry = { version = "0.27", features = ["trace"] }
+opentelemetry_sdk = { version = "0.27", features = ["rt-tokio"] }
+opentelemetry-otlp = { version = "0.27", features = ["grpc-tonic"] }
+
+# --- Outbound HTTP / WebSocket ---
+reqwest = { version = "0.12", default-features = false, features = [
+    "json",
+    "rustls-tls",
+] }
+tokio-tungstenite = { version = "0.24", features = ["rustls-tls-webpki-roots"] }
+futures-util = { version = "0.3", default-features = false, features = ["sink", "std"] }
+
+# --- Validation & errors ---
+validator = { version = "0.18", features = ["derive"] }
+thiserror = "1"
+anyhow = "1"
+
+# --- Config bootstrap ---
+dotenvy = "0.15"
+
+# --- Security / networking ---
+ipnet = "2.11"
+
+# --- Async traits (provider adapters) ---
+async-trait = "0.1"
+
+# =============================================================================
+# Dev & test
+# =============================================================================
+
+[dev-dependencies]
+tokio-test = "0.4"
+http-body-util = "0.1"
+hyper = { version = "1", features = ["full"] }
+tower = { version = "0.5", features = ["util"] }
+
+# =============================================================================
+# Profiles — compilation & optimization
+# =============================================================================
+
+# Local development: fast iteration
+[profile.dev]
+opt-level = 0
+debug = true
+incremental = true
+
+# Compile dependencies faster in dev (rustc fingerprint trick)
+[profile.dev.package."*"]
+opt-level = 1
+
+# Integration / unit tests
+[profile.test]
+opt-level = 1
+debug = true
+incremental = true
+
+# Benchmarks match release characteristics
+[profile.bench]
+inherits = "release"
+
+# Staging / pre-prod: smaller/faster builds than full release, still optimized
+[profile.staging]
+inherits = "release"
+opt-level = 2
+lto = "thin"
+codegen-units = 8
+strip = "symbols"
+
+# Production: smallest binary, max runtime performance
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+strip = "symbols"
+panic = "abort"
+debug = false
+# Keep integer overflow checks in fintech paths (default is off in release)
+overflow-checks = true
+
+# Build scripts / proc-macros at O3 under release builds
+[profile.release.build-override]
+opt-level = 3
+
+[profile.staging.build-override]
+opt-level = 3

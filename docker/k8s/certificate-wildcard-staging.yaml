@@ -1,0 +1,22 @@
+# Wildcard staging cert — test DNS-01 before production rate limits.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: rsc-gateway-wildcard-tls-staging
+  namespace: rsc-gateway
+  labels:
+    app.kubernetes.io/name: rsc-gateway
+spec:
+  secretName: rsc-gateway-wildcard-tls-staging
+  issuerRef:
+    name: letsencrypt-staging-dns-cloudflare
+    kind: ClusterIssuer
+  dnsNames:
+    - "*.example.com"
+    - example.com
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  usages:
+    - digital signature
+    - key encipherment

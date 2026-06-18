@@ -1,0 +1,25 @@
+# Production TLS certificate — cert-manager renews automatically (~60 days).
+# 1. Point DNS A/AAAA record for api.example.com → Ingress LoadBalancer IP
+# 2. Replace api.example.com below
+# 3. Apply after ClusterIssuer letsencrypt-prod
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: rsc-gateway-tls
+  namespace: rsc-gateway
+  labels:
+    app.kubernetes.io/name: rsc-gateway
+spec:
+  secretName: rsc-gateway-tls
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+    - api.example.com
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  renewBefore: 720h # 30 days
+  usages:
+    - digital signature
+    - key encipherment

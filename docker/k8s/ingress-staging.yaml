@@ -1,0 +1,29 @@
+# Staging Ingress — use while testing Let's Encrypt staging issuer.
+# Switch to ingress.yaml + certificate.yaml for production.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: rsc-gateway-staging
+  namespace: rsc-gateway
+  labels:
+    app.kubernetes.io/name: rsc-gateway
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "2m"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - api.example.com
+      secretName: rsc-gateway-tls-staging
+  rules:
+    - host: api.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: rsc-gateway
+                port:
+                  number: 80

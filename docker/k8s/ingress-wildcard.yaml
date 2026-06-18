@@ -1,0 +1,46 @@
+# Ingress using wildcard certificate (Secret from certificate-wildcard.yaml).
+# List every hostname you route; all must match *.example.com or example.com.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: rsc-gateway-wildcard
+  namespace: rsc-gateway
+  labels:
+    app.kubernetes.io/name: rsc-gateway
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/hsts: "true"
+    nginx.ingress.kubernetes.io/hsts-max-age: "31536000"
+    nginx.ingress.kubernetes.io/hsts-include-subdomains: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "2m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "30"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "30"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - api.example.com
+        - hooks.example.com
+      secretName: rsc-gateway-wildcard-tls
+  rules:
+    - host: api.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: rsc-gateway
+                port:
+                  number: 80
+    - host: hooks.example.com
+      http:
+        paths:
+          - path: /payments/fiat
+            pathType: Prefix
+            backend:
+              service:
+                name: rsc-gateway
+                port:
+                  number: 80

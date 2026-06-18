@@ -1,0 +1,20 @@
+# Let's Encrypt STAGING + Cloudflare DNS-01 — wildcard (*.example.com).
+# Requires Secret cloudflare-api-token in namespace cert-manager.
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-staging-dns-cloudflare
+  labels:
+    app.kubernetes.io/name: rsc-gateway
+spec:
+  acme:
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    email: LETSENCRYPT_EMAIL@example.com
+    privateKeySecretRef:
+      name: letsencrypt-staging-dns-cloudflare-account-key
+    solvers:
+      - dns01:
+          cloudflare:
+            apiTokenSecretRef:
+              name: cloudflare-api-token
+              key: api-token

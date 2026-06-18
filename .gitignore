@@ -1,0 +1,19 @@
+/target
+
+# ── Secrets — NEVER commit (use .env.example as template only) ──
+.env
+.env.*
+!.env.example
+.env.local
+.env.*.local
+.env.prod
+.env.production
+.env.staging
+
+# K8s / cloud secrets (templates *.example.yaml are OK)
+docker/k8s/secret.yaml
+docker/k8s/cert-manager/secret-cloudflare.yaml
+docker/k8s/cert-manager/secret-digitalocean.yaml
+
+*.db
+*.log

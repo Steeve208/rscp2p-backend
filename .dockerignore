@@ -1,0 +1,27 @@
+# Build artifacts
+target/
+**/*.rs.bk
+
+# Git / IDE
+.git/
+.gitignore
+.cursor/
+.vscode/
+.idea/
+
+# Secrets and local env (inject at runtime)
+.env
+.env.*
+!.env.example
+!docker/.env.docker.example
+
+# Docs and CI (not needed in image)
+*.md
+.github/
+
+# Tests (not compiled into release binary)
+tests/
+
+# Local docker orchestration (build context is repo root)
+docker/docker-compose*.yml
+docker/k8s/

@@ -1,0 +1,51 @@
+# DigitalOcean App Platform — example spec.
+# Docs: https://docs.digitalocean.com/products/app-platform/reference/app-spec/
+#
+# Use managed PostgreSQL + Redis; set DATABASE_URL / REDIS_URL as encrypted app secrets.
+# Build: Dockerfile path = docker/Dockerfile, context = /
+
+name: rsc-gateway
+region: nyc
+
+services:
+  - name: api
+    dockerfile_path: docker/Dockerfile
+    source_dir: /
+    http_port: 8080
+    instance_count: 2
+    instance_size_slug: apps-s-1vcpu-1gb
+    health_check:
+      http_path: /health/live
+      initial_delay_seconds: 30
+      period_seconds: 30
+      timeout_seconds: 5
+      success_threshold: 1
+      failure_threshold: 3
+    routes:
+      - path: /
+    envs:
+      - key: ENVIRONMENT
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: "8080"
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        type: SECRET
+      - key: REDIS_URL
+        scope: RUN_TIME
+        type: SECRET
+      - key: JWT_SECRET
+        scope: RUN_TIME
+        type: SECRET
+      - key: MFA_ENCRYPTION_KEY
+        scope: RUN_TIME
+        type: SECRET
+      - key: RSC_RPC_URL
+        scope: RUN_TIME
+        type: SECRET
+      - key: TRUSTED_PROXIES
+        value: "127.0.0.1,10.0.0.0/8,172.16.0.0/12"
+
+# Optional: attach DO Managed Databases and reference via ${db.DATABASE_URL}

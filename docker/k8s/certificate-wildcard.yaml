@@ -1,0 +1,30 @@
+# Wildcard TLS — DNS-01 (no HTTP challenge on port 80 required for issuance).
+#
+# Pick ONE issuer (uncomment issuerRef) after creating the matching DNS API secret:
+#   Cloudflare:    letsencrypt-prod-dns-cloudflare
+#   DigitalOcean:  letsencrypt-prod-dns-digitalocean
+#
+# Replace example.com with your apex domain.
+# Note: *.example.com does NOT cover the apex — list both if you need both.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: rsc-gateway-wildcard-tls
+  namespace: rsc-gateway
+  labels:
+    app.kubernetes.io/name: rsc-gateway
+spec:
+  secretName: rsc-gateway-wildcard-tls
+  issuerRef:
+    name: letsencrypt-prod-dns-cloudflare
+    kind: ClusterIssuer
+  dnsNames:
+    - "*.example.com"
+    - example.com
+  privateKey:
+    algorithm: ECDSA
+    size: 256
+  renewBefore: 720h
+  usages:
+    - digital signature
+    - key encipherment
