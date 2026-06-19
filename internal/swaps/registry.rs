@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::internal::swaps::models::{LiquidityVenueKind, SwapPair, SwapProviderInfo};
+use crate::internal::swaps::models::SwapProviderInfo;
 use crate::internal::swaps::traits::SwapLiquidityProvider;
 
 pub struct SwapProviderRegistry {

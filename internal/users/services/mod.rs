@@ -11,7 +11,6 @@ use crate::internal::users::audit::{UserAuditContext, UserAuditEventType, UserAu
 use crate::internal::users::error::{format_validation, UserError, UserResult};
 use crate::internal::users::models::{
     AccountDeletionRequest, AccountDeletionResponse, UpdateProfileRequest, UserProfileResponse,
-    UserRole,
 };
 use crate::internal::users::repository::UserRepository;
 

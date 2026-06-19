@@ -9,7 +9,7 @@ use ipnet::IpNet;
 use redis::aio::ConnectionManager;
 use reqwest::Client;
 use tokio::sync::RwLock;
-use tracing::{info, warn};
+use tracing::info;
 
 use crate::internal::config::ThreatIntelConfig;
 

@@ -28,7 +28,7 @@ pub fn admin_router() -> Router<AppState> {
 async fn get_me(
     State(state): State<AppState>,
     user: AuthenticatedUser,
-    headers: HeaderMap,
+    _headers: HeaderMap,
 ) -> UserResult<(HeaderMap, Json<UserProfileResponse>)> {
     let profile = state.users.get_profile(user.claims.sub).await?;
 

@@ -148,15 +148,3 @@ pub struct AccountDeletionResponse {
     pub deletion_scheduled_at: Option<DateTime<Utc>>,
     pub message: &'static str,
 }
-
-/// Admin operations (skeleton)
-#[derive(Debug, Deserialize)]
-pub struct AdminSuspendUserRequest {
-    pub reason: Option<String>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct AdminForceDeleteRequest {
-    pub reason: Option<String>,
-    pub immediate: bool, // if true, anonymize right away (bypass grace)
-}

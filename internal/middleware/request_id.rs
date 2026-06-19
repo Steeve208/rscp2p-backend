@@ -1,6 +1,5 @@
 //! Per-request correlation id (`X-Request-Id`).
 
-use axum::body::Body;
 use axum::extract::Request;
 use axum::http::header::{HeaderName, HeaderValue};
 use axum::middleware::Next;

@@ -4,7 +4,7 @@ use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
 use tracing::info;
 
-use crate::internal::database::error::{DatabaseError, DatabaseResult};
+use crate::internal::database::error::DatabaseResult;
 
 /// Owns the shared `PgPool` for the application.
 #[derive(Debug, Clone)]

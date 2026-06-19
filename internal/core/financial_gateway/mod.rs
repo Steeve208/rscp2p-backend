@@ -40,11 +40,9 @@ pub struct FinancialGatewayHandle {
 }
 
 struct FinancialGatewayInner {
-    db: PgPool,
     config: Arc<Config>,
     striga_client: StrigaApiClient,
     striga_repo: StrigaRepository,
-    fiat: FiatConversionServiceHandle,
     users: UserService,
     kyc: KycService,
     cards: CardService,
@@ -58,6 +56,7 @@ impl FinancialGatewayHandle {
         config: Arc<Config>,
         fiat: FiatConversionServiceHandle,
     ) -> Self {
+        let _ = fiat;
         let striga_config = config.providers.striga.clone();
         let striga_client = StrigaApiClient::new(http.clone(), striga_config);
         let striga_repo = StrigaRepository::new(db.clone());
@@ -74,11 +73,9 @@ impl FinancialGatewayHandle {
 
         Self {
             inner: Arc::new(FinancialGatewayInner {
-                db,
                 config,
                 striga_client,
                 striga_repo,
-                fiat,
                 users,
                 kyc,
                 cards,

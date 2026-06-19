@@ -35,24 +35,6 @@ impl UserRepository {
         Ok(row.map(Into::into))
     }
 
-    pub async fn find_by_email(&self, email: &str) -> UserResult<Option<User>> {
-        let row = sqlx::query_as::<_, UserRow>(
-            r#"
-            SELECT id, email, display_name, timezone, locale, avatar_url,
-                   preferences, status, version,
-                   created_at, updated_at, mfa_enabled,
-                   deletion_requested_at, deletion_scheduled_at, anonymized_at
-            FROM users
-            WHERE email = $1
-            "#,
-        )
-        .bind(email)
-        .fetch_optional(&self.pool)
-        .await?;
-
-        Ok(row.map(Into::into))
-    }
-
     /// Partial profile update with optimistic locking.
     /// Returns the updated user if successful, or Err(Conflict) if version mismatch.
     pub async fn update_profile_with_version(

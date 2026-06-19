@@ -34,7 +34,6 @@ pub struct AuthService {
     sessions: SessionStore,
     jwt: Arc<JwtKeySet>,
     mfa: MfaService,
-    auth_config: AuthConfig,
     financial_gateway: Option<FinancialGatewayHandle>,
 }
 
@@ -67,7 +66,6 @@ impl AuthService {
             sessions: SessionStore::new(redis, auth_config.clone()),
             jwt: jwt.0.clone(),
             mfa: MfaService::new(&auth_config.mfa_encryption_key, &auth_config.mfa_issuer),
-            auth_config,
             financial_gateway: None,
         }
     }

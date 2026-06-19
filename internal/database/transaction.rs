@@ -18,8 +18,3 @@ impl TransactionManager {
 pub async fn commit(tx: Transaction<'_, Postgres>) -> DatabaseResult<()> {
     tx.commit().await.map_err(DatabaseError::from)
 }
-
-/// Rolls back an open transaction (no-op if already finished).
-pub async fn rollback(tx: Transaction<'_, Postgres>) -> DatabaseResult<()> {
-    tx.rollback().await.map_err(DatabaseError::from)
-}

@@ -117,30 +117,6 @@ impl CryptoService {
             .await
     }
 
-    pub async fn cash_out(
-        &self,
-        user_id: Uuid,
-        req: CryptoTradeRequest,
-    ) -> GatewayResult<CryptoWidgetResponse> {
-        self.off_ramp(user_id, req).await
-    }
-
-    pub async fn fiat_to_crypto(
-        &self,
-        user_id: Uuid,
-        req: CryptoTradeRequest,
-    ) -> GatewayResult<CryptoWidgetResponse> {
-        self.buy_crypto(user_id, req).await
-    }
-
-    pub async fn crypto_to_fiat(
-        &self,
-        user_id: Uuid,
-        req: CryptoTradeRequest,
-    ) -> GatewayResult<CryptoWidgetResponse> {
-        self.sell_crypto(user_id, req).await
-    }
-
     async fn start_trade(
         &self,
         user_id: Uuid,

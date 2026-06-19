@@ -6,8 +6,6 @@ use crate::internal::providers::transak::config::TransakProviderConfig;
 use crate::internal::providers::transak::error::{TransakError, TransakResult};
 use crate::internal::providers::transak::models::{OnRampQuote, OrderStatus, TransakOrder};
 
-const DEFAULT_BASE: &str = "https://api.transak.com";
-
 #[derive(Clone)]
 pub struct TransakApiClient {
     http: Client,

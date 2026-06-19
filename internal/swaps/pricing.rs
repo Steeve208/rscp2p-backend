@@ -4,11 +4,11 @@ use crate::internal::swaps::config::SwapsConfig;
 use crate::internal::swaps::error::{SwapError, SwapResult};
 use crate::internal::swaps::fees::apply_platform_fee;
 use crate::internal::swaps::models::{
-    FeeBreakdown, ProviderQuoteView, SwapPair, SwapQuoteRequest, SwapQuoteResponse,
+    ProviderQuoteView, SwapPair, SwapQuoteRequest, SwapQuoteResponse,
 };
 use crate::internal::swaps::registry::SwapProviderRegistry;
 use crate::internal::swaps::routing::{rank_quotes, RoutedQuote};
-use crate::internal::swaps::traits::{LiquidityQuote, QuoteRequest};
+use crate::internal::swaps::traits::QuoteRequest;
 
 pub struct PricingEngine;
 

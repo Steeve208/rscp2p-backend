@@ -476,30 +476,6 @@ fn normalize_chain(chain: &str) -> ProviderResult<String> {
     Ok(v)
 }
 
-async fn resolve_merchant_wallet(
-    wallets: &WalletServiceHandle,
-    merchant: &crate::internal::payments::models::Merchant,
-) -> ProviderResult<Uuid> {
-    match merchant.wallet_id {
-        Some(wallet_id) => {
-            if !wallets
-                .wallet_belongs_to_user(wallet_id, merchant.owner_user_id)
-                .await
-                .map_err(map_wallet_error)?
-            {
-                return Err(ProviderError::Validation(
-                    "merchant wallet does not belong to owner".into(),
-                ));
-            }
-            Ok(wallet_id)
-        }
-        None => wallets
-            .get_default_wallet_id(merchant.owner_user_id)
-            .await
-            .map_err(map_wallet_error),
-    }
-}
-
 fn map_payment_error(err: PaymentError) -> ProviderError {
     match err {
         PaymentError::InsufficientBalance => {

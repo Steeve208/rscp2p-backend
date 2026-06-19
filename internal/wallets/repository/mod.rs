@@ -1219,6 +1219,7 @@ impl From<WalletBalanceRow> for WalletBalance {
 
 #[derive(sqlx::FromRow)]
 struct WithdrawalLockRow {
+    #[allow(dead_code)]
     id: Uuid,
     wallet_id: Uuid,
     asset: String,

@@ -4,7 +4,7 @@ use std::sync::OnceLock;
 
 use opentelemetry::trace::TracerProvider as _;
 use opentelemetry_otlp::WithExportConfig;
-use opentelemetry_sdk::trace::{self, Sampler, TracerProvider};
+use opentelemetry_sdk::trace::{Sampler, TracerProvider};
 use opentelemetry_sdk::Resource;
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer};
 
@@ -86,10 +86,7 @@ fn build_otlp_provider(cfg: &ObservabilityConfig) -> anyhow::Result<TracerProvid
 
     Ok(TracerProvider::builder()
         .with_batch_exporter(exporter, opentelemetry_sdk::runtime::Tokio)
-        .with_config(
-            trace::Config::default()
-                .with_sampler(sampler)
-                .with_resource(resource),
-        )
+        .with_sampler(sampler)
+        .with_resource(resource)
         .build())
 }
