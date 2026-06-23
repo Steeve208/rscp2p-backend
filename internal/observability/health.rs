@@ -2,6 +2,7 @@
 //!
 //! | Route | Purpose |
 //! |-------|---------|
+//! | `GET /` | Service identity and quick links |
 //! | `GET /health/live` | Liveness — process is running |
 //! | `GET /health/ready` | Readiness — dependencies available |
 //! | `GET /health` | Detailed status for ops dashboards |
@@ -17,6 +18,7 @@ use axum::routing::get;
 use axum::Router;
 use serde::Serialize;
 
+use crate::internal::config::Environment;
 use crate::internal::database;
 use crate::internal::redis;
 use crate::internal::state::AppState;
@@ -25,10 +27,40 @@ use super::metrics;
 
 pub fn router() -> Router<AppState> {
     Router::new()
+        .route("/", get(root))
         .route("/health", get(health_detailed))
         .route("/health/live", get(liveness))
         .route("/health/ready", get(readiness))
         .route("/metrics", get(prometheus_metrics))
+}
+
+// ── Root ───────────────────────────────────────────────────────────────────────
+
+#[derive(Serialize)]
+struct RootResponse {
+    name: &'static str,
+    status: &'static str,
+    network: &'static str,
+    version: &'static str,
+    health: &'static str,
+}
+
+async fn root(State(state): State<AppState>) -> axum::Json<RootResponse> {
+    axum::Json(RootResponse {
+        name: "RSC Gateway",
+        status: "online",
+        network: network_label(state.config.environment),
+        version: env!("CARGO_PKG_VERSION"),
+        health: "/health/live",
+    })
+}
+
+fn network_label(environment: Environment) -> &'static str {
+    match environment {
+        Environment::Production => "mainnet",
+        Environment::Staging => "testnet",
+        Environment::Development => "devnet",
+    }
 }
 
 // ── Liveness ───────────────────────────────────────────────────────────────────

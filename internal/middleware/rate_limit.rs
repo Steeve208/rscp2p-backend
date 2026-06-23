@@ -12,7 +12,7 @@ use crate::internal::security::client_ip;
 use crate::internal::state::AppState;
 
 /// Paths that skip rate limiting (health probes, metrics scrapes).
-const SKIP_PREFIXES: &[&str] = &["/health", "/metrics"];
+const SKIP_PREFIXES: &[&str] = &["/", "/health", "/metrics"];
 
 pub async fn middleware(
     State(state): State<AppState>,

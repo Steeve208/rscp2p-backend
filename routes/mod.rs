@@ -38,7 +38,7 @@ use crate::internal::middleware::auth::require_auth;
 use crate::internal::observability;
 use crate::internal::state::AppState;
 
-/// Builds the full HTTP API: health/metrics (public), domain routes, JWT gate, global stack.
+/// Builds the full HTTP API: root info + health/metrics (public), domain routes, JWT gate, global stack.
 pub fn create_router(state: AppState) -> Router {
     let public = Router::new()
         .merge(observability::health_router())
